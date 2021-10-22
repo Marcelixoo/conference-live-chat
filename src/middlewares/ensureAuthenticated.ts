@@ -20,7 +20,6 @@ export function ensureAuthenticated(
 
     const [, token] = authToken.split(" ");
 
-    /* It token is invalid an exception will be raised */
     try {
         const { sub } = verify(token, process.env.JWT_SECRET) as IPayload;
 

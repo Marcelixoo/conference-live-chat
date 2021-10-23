@@ -12,7 +12,13 @@ type UserType = {
     login: string,
     name: string
     avatar_url: string,
+}
 
+type UserInfoResponse = {
+    id: number,
+    login: string,
+    name: string
+    avatar_url: string,
 }
 
 /**
@@ -29,8 +35,8 @@ type UserType = {
 class AuthenticateUserService {
     async execute(code: string) {
         const accessToken = await this.getAccessToken(code);
-        const userInformation = await this.getUserInformation(accessToken);
-        const user = await this.findOrCreateUser(userInformation);
+        const userInfo = await this.getUserInformation(accessToken);
+        const user = await this.findOrCreateUser(userInfo);
         const token = await this.generateApplicationToken(user);
 
         return { token, user };
@@ -53,8 +59,8 @@ class AuthenticateUserService {
         return response.access_token;
     }
 
-    async getUserInformation(accessToken: string): Promise<UserType> {
-        const { data: userResponse } = await axios.get<UserType>("https://api.github.com/user", {
+    async getUserInformation(accessToken: string): Promise<UserInfoResponse> {
+        const { data: userResponse } = await axios.get<UserInfoResponse>("https://api.github.com/user", {
             headers: {
                 authorization: `Bearer ${accessToken}`
             }
@@ -63,22 +69,22 @@ class AuthenticateUserService {
         return userResponse;
     }
 
-    async findOrCreateUser(userInformation: UserType): Promise<UserType> {
+    async findOrCreateUser(userInformation: UserInfoResponse): Promise<UserType> {
         const user = await prismaClient.user.findFirst({
             where: {
-                github_id: userInformation.github_id
+                github_id: userInformation.id
             }
         });
 
         if (!user) {
             return await prismaClient.user.create({
                 data: {
-                    github_id: userInformation.github_id,
+                    github_id: userInformation.id,
                     login: userInformation.login,
                     avatar_url: userInformation.avatar_url,
                     name: userInformation.name
                 }
-            })
+            });
         }
 
         return user;

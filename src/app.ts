@@ -8,8 +8,8 @@ import cors from "cors";
 const app = express();
 
 app.use(express.json());
+app.use(cors());  // Should go before the router :)
 app.use(router);
-app.use(cors());
 
 const serverHttp = http.createServer(app);
 
